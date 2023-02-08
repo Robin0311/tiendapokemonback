@@ -1,5 +1,5 @@
 const mongoose =  require ('mongoose')
-const productSchema = mongoose.Schema(
+const productstSchema = mongoose.Schema(
     {
         name: { type: String, require: true},
         type: { type: String, require: true},
@@ -8,5 +8,5 @@ const productSchema = mongoose.Schema(
         photo: {type: String, require: true}
     }
 )
-const Product = mongoose.model('product', productSchema)
-module.exports = Product
+const Productst = mongoose.model('productst', productstSchema)
+module.exports = Productst
