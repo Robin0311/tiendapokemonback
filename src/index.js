@@ -24,7 +24,7 @@ app.get('/', (req, res) =>{
 //Collecciones
 //Customers
 // localhost:5000/customers
-app.use('/customers', require('../src/routers/customers.routers'))
+app.use('/customer', require('../src/routers/customers.routers'))
 
 //shopping
 // localhost:5000/shopping
