@@ -26,30 +26,47 @@ const createCustomer = async (req, res) => {
       email: email,
       password: hasedPassword
     })
-    res.json({ msg: ' Usuario creado'})
-    
-    msgFormatConst("newCustomer");
-    // resApi(res, 'success', newCustomer)
-    } catch (error){
-    resApi(res, 'error',{
-    msg: error
-    });
-  }
+    const payload = {
+			user: {
+				id: newCustomer._id,
+			},
+		}
+
+		// 2. FIRMAR EL JWT
+		jwt.sign(
+			payload, // DATOS QUE SE ACOMPAÑARÁN EN EL TOKEN
+			process.env.SECRET, // LLAVE PARA DESCIFRAR LA FIRMA ELECTRÓNICA DEL TOKEN,
+			{
+				expiresIn: 360000, // EXPIRACIÓN DEL TOKEN
+			},
+			(error, token) => {
+				// CALLBACK QUE, EN CASO DE QUE EXISTA UN ERROR, DEVUELVA EL TOKEN
+				if (error) throw error
+				// res.json(respuestaDB)
+				res.json({ token })
+			}
+		)
+	} catch (error) {
+		return res.status(400).json({
+			msg: error,
+		})
+	}
   
 };
 
 const loginCustomer = async (req, res) => {
+  const { email, password } = req.body
   try {
-   const { email, password } = req.body
-    let foundCustomer = await Customer.findOne({
+   
+    let foundUser = await Customer.findOne({
       email: email
     })
 
-    if (!foundCustomer) {
+    if (!foundUser) {
       return res.status(400).json({ msg : 'El cliente no esta resgistrado'})
     }
 
-    const passSuccess = await bcryptjs.compare(password, foundCustomer.password)
+    const passSuccess = await bcryptjs.compare(password, foundUser.password)
 
     if (!passSuccess) {
       return await res.status(400).json({ msg : 'Password incorrecto'})
@@ -57,7 +74,7 @@ const loginCustomer = async (req, res) => {
 
     const payload = {
       user: {
-        id: foundCustomer.id
+        id: foundUser.id
       }
     }
 
@@ -67,14 +84,31 @@ const loginCustomer = async (req, res) => {
           if(error) throw error
           res.json({token: token})
         })
+    }else {
+			res.json({ msg: 'Hubo un error', error })
     }
-
   } catch (error){
-    resApi(res, 'error',{
-    msg: error
-    });
+    res.json({ msg: 'Hubo un error', error });
   }
 }
+  
+
+
+const verificarCustomer = async (req, res) => {
+	try {
+		// CONFIRMAMOS QUE EL USUARIO EXISTA EN BASE DE DATOS Y RETORNAMOS SUS DATOS, EXCLUYENDO EL PASSWORD
+		const customer = await Customer.findById(req.user.id).select('-password')
+		res.json({ customer })
+	} catch (error) {
+		// EN CASO DE ERROR DEVOLVEMOS UN MENSAJE CON EL ERROR
+		res.status(500).json({
+			msg: 'Hubo un error',
+			error,
+		})
+	}
+}
+
+
 
 const updateCustomers = async(req, res) => {
   try {
@@ -110,5 +144,64 @@ module.exports = {
   createCustomer,
   updateCustomers,
   deleteCustomers,
-  loginCustomer
+  loginCustomer,
+  verificarCustomer
 };
+
+
+
+
+// const loginCustomer = async (req, res) => {
+  
+
+
+
+
+// try {
+//   msg("Logging in a user")
+//   const user = await Customer.findOne({ email: req.body.email })
+//   if (!user) {
+//     return res.status(400).json({
+//       message: "User not found"
+//     })
+//   }
+//   if (!bcrypt.compareSync(req.body.password, user.password)) {
+//     return res.status(400).json({
+//       message: "Password is correct"
+//     })
+//   }
+//   if (user.email && user.password) {
+//     return res.status(400).json({
+//       message: "password is incorrect"
+//     })
+//   }
+//   if (user.email && user. password) {
+
+//     jwt.sign(
+//       {
+//         user: {
+//           id: user.id,
+//         },
+//       },
+//       process.env.SECRET,
+//       {
+//         expiresIn: 60 * 60 *24
+//       },
+//       (err, token) => {
+//         if (err) throw err
+//         res.json({ token })
+//       }
+//     )
+//     console.log("token: ", token)
+//     console.log("User: ", user)
+//   } else {
+//     return res.status(400).json({
+//       message: "User not found"
+//     })
+//   }
+// } catch (err) {
+//   msjPError("Error loggin in user")
+//   return res.status(500).json({
+//     status: "error"
+//   })
+// }
